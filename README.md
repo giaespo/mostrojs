@@ -6,5 +6,5 @@ handlebar.js for template engine;
 
 unify.js for objects unification;
 
-jquery only for retrieving templates from folders.(maybe we remove this in the future ).
+jquery only for retrieving templates from folders.(maybe it will be removed in the future ).
 
