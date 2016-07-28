@@ -4,46 +4,42 @@ var MostroRoute = (function () {
 	var partialPath = "partials/";
 	
 	var _retrieveTemplate = function retrieveTemplate(tmpl,id,data) {
-        console.log('retrieve');
-        console.log(data);
         if (templates[tmpl] === undefined) {
-            console.log("need");
             jQuery.get( templatePath + tmpl + ".html", function(resp) {
-            console.log(resp);
             templates[tmpl] = Handlebars.compile(resp);
-            console.log(templates[tmpl]);
             var template = templates[tmpl];
             var html    = template(data);
-            console.log(html);
             $("#" + id).html(html);
       });
      }
-         //var template = templates[tmpl];
-         //var html    = template(data);
-         //$("#msg").html(html);
+         var template = templates[tmpl];
+         if (template){
+             var html    = template(data);
+             $("#" + id).html(html);
+         }
      }
 
 	var _goToUrl = function goToUrl(rule,facts,vars){
-	               console.log('pushstate');
 	               var topic = ""
 	               if (vars.topic){
 					   topic = vars.topic;
 				   }
+				   console.log("dentro push");
+				   console.log(vars);
 	               history.pushState(vars, topic, vars.url);
 	               _retrieveTemplate(vars.path,vars.id,vars)
+	               Engine.changeScope(vars.url);
     }
     
     var _registerPartial = function _registerPartial(rule,facts,vars){
-		console.log(vars);
 		jQuery.get( partialPath + vars.path + ".html", function(data) {
-            console.log(data);
             Handlebars.registerPartial(vars.name, data);
 	    });
 	}
 	
 	 var defaultRoute = {
 		 "route":{
-		      left:[{type:"route",url:V("url")},{type:'parameters',ref:V("url"),params:V("params")},{type:"template",ref:V("url"),path:V("path"),id:V("id")}],
+		      left:[{type:"route",url:V("url"),scope:V("scope")},{type:'params',ref:V("url"),params:V("params"),scope:V("scope")},{type:"template",ref:V("url"),path:V("path"),id:V("id"),scope:V("scope")}],
               right:[_goToUrl],
               debug : []
 	      }
@@ -51,7 +47,7 @@ var MostroRoute = (function () {
 	 
 	 var partialRules = {
 		 "partial":{
-		      left:[{type:"partial",name:V("name"),path:V("path")}],
+		      left:[{type:"partial",name:V("name"),path:V("path"),scope:V("scope")}],
               right:[_registerPartial],
               debug : []
 	      }
