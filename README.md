@@ -12,7 +12,7 @@ best use cases of mostrojs:
 
 1)Asynchronous calls coordination.
 
-in modern javascript we have to manage dozens of asynchronous calls, especially when you create single page website.
+in modern javascript we have to manage dozens of asynchronous calls, especially when we create single page website.
 Because of this, we see the proliferation of callbacks that inside them have asynchronous calls too.
 This produces a spaghetti code that is very difficult to maintain.
 If we add WebWorkers that communicate with the main thread, it is the delirium!
@@ -37,13 +37,13 @@ right: [BLAction1, BLAction2 ...]
 debug: []
 }
 
-This system is very scalable, for example to coordinate 2 or more asynchronous calls,
- in order to do something only after receiving data from all, the mode of operation remains unchanged, the calbacks continue to only assert facts, while the rules of the system will take care of the application logic.
+This system is very scalable, for example to coordinate 2 or more asynchronous calls.
+ In order to do something only after receiving data from all, the way of do it remains unchanged, the calbacks continue to only assert facts, while the rules of the system will take care of the application logic.
 
 function callback1 (data1) {Engine.assertFact (data1)}
 
 BLRule = {
-left: [data data1]
+left: [data,data1]
 right: [BLAction1, BLAction2 ...]
 debug: []
 }
