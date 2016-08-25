@@ -1,6 +1,7 @@
 var V = unify.variable;
 
 var Engine = (function () {
+//fact code update automatically by 1 for every fact asserted
   var code = 0	
   var _rulesIndex = {};
   var facts = {};
@@ -36,6 +37,7 @@ var _extendRules = function extendRules(ruls){
 }
 
 var _fireRule = function(rule,fats,vars){
+	console.log("dentro fire rule");
 	ffacts = []
 	for (f in fats){;
 	    ffacts.push(facts[fats[f]])	
@@ -45,33 +47,137 @@ var _fireRule = function(rule,fats,vars){
 	}
 }
 
+var _deleteIndex = function _deleteIndex(index,code){
+	console.log("delete index");
+	console.log(index);
+	rule = DB[index];
+    for (f=1;f<rule['dim'];f++){
+		lenlevel = rule[f].length;
+		console.log(lenlevel);
+		for(i=0;i<lenlevel-1;i++){
+			console.log(rule[f][i]);
+			pos = rule[f][i].facts.indexOf(code);
+		    if (pos != -1){
+			    rule[f].splice(i,1);	
+			}	
+		}
+		/*if (fatts[f] != code){
+	        indf = factsIndex[fatts[f]];
+	        for (el in indf){
+			    val = indf[el];
+				strval = val[0] + val[1] + val[2];
+				if (strval == index[0] + index[1] + index[2]){
+					console.log("elimino indice",factsIndex[fatts[f]][el]);
+					console.log(factsIndex[fatts[f]][el]);
+			        factsIndex[fatts[f]].splice(el,1);
+			    }	
+			}
+	    }*/
+	}
+}
+
+var _decreaseIndex = function _decreaseIndex(index,code){
+    rule = index[0];
+    level = index[1];
+    position = index[2];
+    for (ele = position+1; ele < DB[rule][level].length; ele++){
+	    fatti = DB[rule][level][ele].facts;
+	    if(fatti.indexOf(code) == -1){
+	        for (f in fatti){
+				value = factsIndex[fatti[f]];
+                for(ind in value){
+					val = value[ind];
+					strval = val[0] + val[1] + val[2];
+				    if (strval == rule + level + ele){
+					    factsIndex[fatti[f]][ind] = [val[0],val[1],val[2]-1];
+					    break;	
+					}
+				}
+		    }	
+		}
+	}	
+}
+
+var _retractFacts2 = function _retractFacts2(code){
+	console.log('dentro retract fact2');
+	console.log("code",code);
+	indx = factsIndex[code];
+	console.log(indx);
+	for (var i=0;i<indx.length;i++){
+		_deleteIndex(indx[i],code);
+	}
+	delete factsIndex[code];
+    delete facts[code];
+	
+}
+
+
 
 var _retractFacts = function _retractFacts(code){
+	console.log('dentro retract fact');
+	console.log("code",code);
 	indx = factsIndex[code];
 	console.log(indx);
 	rul = []
-	for (var i=1;i<indx.length;i++){
+	for (var i=0;i<indx.length;i++){
 		//DB[indx[0][0]][indx[0][1]].splice(indx[0][2],1);
 		console.log(i);
 		//console.log(DB[indx[i][0]][indx[i][1]][indx[i][2]]);
-		delete DB[indx[i][0]][indx[i][1]][indx[i][2]];
-		rul.push(DB[indx[i][0]][indx[i][1]]);
+		var pos = indx[i][2];
+		console.log('pos',pos);
+		lenlevel = DB[indx[i][0]][indx[i][1]].length;
+		for (f = pos;f < (lenlevel - 1);f++){
+			console.log(f);
+			console.log(DB[indx[i][0]][indx[i][1]]);
+			fatts = DB[indx[i][0]][indx[i][1]][f].facts;
+			console.log(fatts);
+			console.log('il quattro',factsIndex[4]);
+		    for(el in fatts){
+			   if (fatts[el]!=code){
+				   console.log(fatts[el],code);
+			       indexfatt = factsIndex[fatts[el]];
+			       console.log(fatts[el]);
+			       console.log('index',indexfatt);
+			       for (p in indexfatt){
+				       val = indexfatt[p];
+				       strval = val[0] + val[1] + val[2];
+				       if (strval == indx[i][0] + indx[i][1] + f){
+						   if (f==pos){
+							  factsIndex[fatts[el]].splice(p,1);    
+						   }else{
+					          factsIndex[fatts[el]][p] = [val[0],val[1],val[2]-1]; 
+					          console.log("diminuisco il valore nell'indice",factsIndex[fatts[el]][p],[val[0],val[1],val[2]]);
+						   }
+					   }
+			       }
+			   } 	
+		   }	
+		}
+		//delete DB[indx[i][0]][indx[i][1]][indx[i][2]];
+		//rul.push(DB[indx[i][0]][indx[i][1]]);
+		console.log("delete element",indx[i][0],indx[i][1]);
+		console.log("delete element", DB[indx[i][0]][indx[i][1]][indx[i][2]].facts);
 		
-		//DB[indx[i][0]][indx[i][1]].splice(indx[i][2]-,1);
+		DB[indx[i][0]][indx[i][1]].splice(indx[i][2],1);
+		//console.log("element", DB[indx[i][0]][indx[i][1]][indx[i][2]].facts);
     }
-    for(x in rul){
-	    rul[x] = rul[x].filter(function( element ) {
-            return element !== undefined;
-        });	
-	}
+    //for(x in rul){
+	//    rul[x] = rul[x].filter(function( element ) {
+    //        return element !== undefined;
+    //    });	
+	//}
+	//console.log(rul);
     delete factsIndex[code];
     delete facts[code];
 }
 
 
-var _createMerged = function(rule,fact){
-	r = rule;
-	arrmerg = _rulesIndex[rule].slice();
+var _createMerged = function(r,fact){
+	console.log("rule",r);
+	console.log("fact",fact);
+	//var r = rule;
+	arrmerg = _rulesIndex[r].slice();
+	console.log(arrmerg);
     var index = arrmerg.indexOf(fact.type);
     if (index > -1) {
         arrmerg.splice(index, 1);
@@ -97,17 +203,27 @@ var _createMerged = function(rule,fact){
 					if (success){
 						if (m<DB[r]['dim']){
 							vr = _extend(fact.vars,DB[r][m][c].vars);	
+							console.log("vr",vr);
 						    DB[r][m+1].push({types:[fact.type].concat(DB[r][m][c]['types']),vars:vr,facts:[fact.fact].concat(DB[r][m][c].facts)});
 						    pos = DB[el][m+1].length-1;
 						    dbfacts = DB[r][m][c].facts;
-						    factsIndex[fact.fact].push([r,m+1,pos]);
-						    for (i in dbfacts){
-								console.log(dbfacts[i]);
-								console.log(facts[dbfacts[i]]);
-							    factsIndex[dbfacts[i]].push([r,m+1,pos]);
+						    console.log("dbfacts",dbfacts);
+						    if (m<DB[r]['dim']-1){
+								console.log("aggiungo elemento",fact.fact,r,m+1,pos);
+								if (factsIndex[fact.fact].indexOf(r) == -1){
+						            factsIndex[fact.fact].push(r);
+						        }
+						        for (i in dbfacts){
+								    console.log(dbfacts[i]);
+								    console.log(facts[dbfacts[i]]);
+								    console.log("aggiungo elementonuovo",dbfacts[i],r,m+1,pos);
+								    if (factsIndex[dbfacts[i]].indexOf(r) == -1){
+						                factsIndex[dbfacts[i]].push(r);
+						            }
+							    }
 							} 
 						}
-					}
+					 }
 				}
 	        }
 	    }
@@ -156,7 +272,8 @@ var _createMerged = function(rule,fact){
                      felem = {'facts':[fact.code],'vars':results,'types':[fact.type]};
                      felem2 = {'fact':fact.code,'vars':results,'type':fact.type};
                      DB[el][1].push(felem);
-                     factsIndex[fact.code].push([r,1,DB[el][1].length-1]);
+                     console.log('inserisco il primo elemento',fact.code,el,1,DB[el][1].length-1);
+                     factsIndex[fact.code].push(el);
                      _createMerged(el,felem2);
                      
 				 }
@@ -196,7 +313,7 @@ var _createMerged = function(rule,fact){
               console.log(scope[older]);
               for (f in scope[older]){
 				  console.log(scope[older][f]);
-	              _retractFacts(scope[older][f]);
+	              _retractFacts2(scope[older][f]);
 	          }
 	          scope[older] = [];
 	      }
@@ -217,7 +334,7 @@ var _createMerged = function(rule,fact){
     FactIndex:getFactIndex,
     getScope:getScope,
     Rules: getRules,
-    retractFact: _retractFacts,
+    retractFact: _retractFacts2,
     changeScope: _changeActiveScope,
   };
 
