@@ -26,7 +26,7 @@ var MostroRoute = (function () {
 				   }
 				   console.log("dentro push");
 				   console.log(vars);
-	               history.pushState(vars, topic, vars.url);
+	               history.pushState(facts, topic, vars.url);
 	               _retrieveTemplate(vars.path,vars.id,vars)
 	               Engine.changeScope(vars.url);
     }
