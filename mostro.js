@@ -9,6 +9,8 @@ var Engine = (function () {
   var DB = {};
   var rules = {};
   var scope = {"active":"global"};
+  var threads = {};
+  var threadcode = 0;
   
    var _createRuleIndex = function createRuleIndex(){
     for (r in rules){
@@ -36,6 +38,37 @@ var _extendRules = function extendRules(ruls){
     }	
 }
 
+
+var _getThreadCode = function _getThreadCode(){
+    var thcode = "thread" + threadcode;
+    threadcode += 1;
+    return thcode;
+}
+
+var _threadWrapper = function _threadWrapper(func){
+	
+	if(typeof(Worker) !== "undefined"){
+	    return function(rule,facts,vars){
+	        cod = _getThreadCode();
+	        var engineWrapper = "var Engine = (function () {var assertFact = function assertFact(fact){postMessage(JSON.stringify(fact))};return {assertFact:assertFact};})();"
+	        var wrapper = "function wrap(event){ var func = " + func.toString() + "; var data = event.data;func(data['rule'],data['facts'],data['vars']);}";
+	        console.log(engineWrapper + "self.onmessage = " + wrapper);
+	        threads[cod] = new Worker(URL.createObjectURL(new Blob([
+                       engineWrapper + "self.onmessage = " + wrapper], {
+                       type: 'application/javascript'
+                       })));
+            threads[cod].postMessage({"rule":rule,"facts":facts,"vars":vars});
+            threads[cod].onmessage=function(e){Engine.assertFact(JSON.parse(e.data))}
+        
+        }
+    }else{
+        return func;	
+	}
+}
+
+
+
+
 var _fireRule = function(rule,fats,vars){
 	console.log("dentro fire rule");
 	ffacts = []
@@ -61,45 +94,12 @@ var _deleteIndex = function _deleteIndex(index,code){
 			    rule[f].splice(i,1);	
 			}	
 		}
-		/*if (fatts[f] != code){
-	        indf = factsIndex[fatts[f]];
-	        for (el in indf){
-			    val = indf[el];
-				strval = val[0] + val[1] + val[2];
-				if (strval == index[0] + index[1] + index[2]){
-					console.log("elimino indice",factsIndex[fatts[f]][el]);
-					console.log(factsIndex[fatts[f]][el]);
-			        factsIndex[fatts[f]].splice(el,1);
-			    }	
-			}
-	    }*/
 	}
 }
 
-var _decreaseIndex = function _decreaseIndex(index,code){
-    rule = index[0];
-    level = index[1];
-    position = index[2];
-    for (ele = position+1; ele < DB[rule][level].length; ele++){
-	    fatti = DB[rule][level][ele].facts;
-	    if(fatti.indexOf(code) == -1){
-	        for (f in fatti){
-				value = factsIndex[fatti[f]];
-                for(ind in value){
-					val = value[ind];
-					strval = val[0] + val[1] + val[2];
-				    if (strval == rule + level + ele){
-					    factsIndex[fatti[f]][ind] = [val[0],val[1],val[2]-1];
-					    break;	
-					}
-				}
-		    }	
-		}
-	}	
-}
 
-var _retractFacts2 = function _retractFacts2(code){
-	console.log('dentro retract fact2');
+var _retractFacts = function _retractFacts2(code){
+	console.log('dentro retract fact');
 	console.log("code",code);
 	indx = factsIndex[code];
 	console.log(indx);
@@ -113,63 +113,6 @@ var _retractFacts2 = function _retractFacts2(code){
 
 
 
-var _retractFacts = function _retractFacts(code){
-	console.log('dentro retract fact');
-	console.log("code",code);
-	indx = factsIndex[code];
-	console.log(indx);
-	rul = []
-	for (var i=0;i<indx.length;i++){
-		//DB[indx[0][0]][indx[0][1]].splice(indx[0][2],1);
-		console.log(i);
-		//console.log(DB[indx[i][0]][indx[i][1]][indx[i][2]]);
-		var pos = indx[i][2];
-		console.log('pos',pos);
-		lenlevel = DB[indx[i][0]][indx[i][1]].length;
-		for (f = pos;f < (lenlevel - 1);f++){
-			console.log(f);
-			console.log(DB[indx[i][0]][indx[i][1]]);
-			fatts = DB[indx[i][0]][indx[i][1]][f].facts;
-			console.log(fatts);
-			console.log('il quattro',factsIndex[4]);
-		    for(el in fatts){
-			   if (fatts[el]!=code){
-				   console.log(fatts[el],code);
-			       indexfatt = factsIndex[fatts[el]];
-			       console.log(fatts[el]);
-			       console.log('index',indexfatt);
-			       for (p in indexfatt){
-				       val = indexfatt[p];
-				       strval = val[0] + val[1] + val[2];
-				       if (strval == indx[i][0] + indx[i][1] + f){
-						   if (f==pos){
-							  factsIndex[fatts[el]].splice(p,1);    
-						   }else{
-					          factsIndex[fatts[el]][p] = [val[0],val[1],val[2]-1]; 
-					          console.log("diminuisco il valore nell'indice",factsIndex[fatts[el]][p],[val[0],val[1],val[2]]);
-						   }
-					   }
-			       }
-			   } 	
-		   }	
-		}
-		//delete DB[indx[i][0]][indx[i][1]][indx[i][2]];
-		//rul.push(DB[indx[i][0]][indx[i][1]]);
-		console.log("delete element",indx[i][0],indx[i][1]);
-		console.log("delete element", DB[indx[i][0]][indx[i][1]][indx[i][2]].facts);
-		
-		DB[indx[i][0]][indx[i][1]].splice(indx[i][2],1);
-		//console.log("element", DB[indx[i][0]][indx[i][1]][indx[i][2]].facts);
-    }
-    //for(x in rul){
-	//    rul[x] = rul[x].filter(function( element ) {
-    //        return element !== undefined;
-    //    });	
-	//}
-	//console.log(rul);
-    delete factsIndex[code];
-    delete facts[code];
-}
 
 
 var _createMerged = function(r,fact){
@@ -304,6 +247,18 @@ var _createMerged = function(r,fact){
 	_createCachedDB();
 	
 	};
+
+  var _resetEngine = function _resetEngine(){
+      code = 0	
+      _rulesIndex = {};
+      facts = {};
+      factsIndex = {};
+      DB = {};
+      scope = {"active":"global"};
+      threads = {};
+      threadcode = 0;
+      _start();
+}
 	
   var _changeActiveScope = function _changeActiveScope(newscope){
 	  if (newscope != "global"){
@@ -334,15 +289,10 @@ var _createMerged = function(r,fact){
     FactIndex:getFactIndex,
     getScope:getScope,
     Rules: getRules,
-    retractFact: _retractFacts2,
+    retractFact: _retractFacts,
     changeScope: _changeActiveScope,
+    Thread: _threadWrapper,
+    reset: _resetEngine,
   };
 
 })();
-
-//Engine.start();
-//Engine.assertFact({type:"template",nome:'bel template',div:'primo'});
-//Engine.assertFact({type:"felino",denti:[1,2]});
-//Engine.assertFact({type:"gatto",nome:[1,2]});
-//Engine.assertFact({type:'uomo',nome:{name:'giggino',cognome:'sbirulino'}});
-//console.log(Engine.rulesIndex);
