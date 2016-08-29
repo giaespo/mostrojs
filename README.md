@@ -52,3 +52,6 @@ The same happens using WebWorkers. In this case the worker will send a message t
 
 Note that the business logic rules are much more readable than js code written in spaghetti code, the semantics of the rule is easy to interpret.
 
+I added a simple example which shows performance and coordination of mutìltithread application.
+The example can run only under a web server.
+You can run python simple web server "python -m SimpleHTTPServer 8008" in the mostrojs folder and then from 127.0.0.1:8008, navigate to examples/index.html page.
