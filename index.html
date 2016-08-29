@@ -1,18 +1,53 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <title>Instant Handlebars Code</title>
+    <title>Performance comparation</title>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
     <script src="handlebars.js"></script>
     <script src="unify.js"></script>
-    <script src="actions.js"></script>
     <script src="mostro.js"></script>
-    <script src="mostro-route.js"></script>
+    <script src="actions.js"></script>
     <script src="rules.js"></script>
     <script src="app.js"></script>
-    
+    <style>
+        table, th, td {
+            border: 1px solid black;
+        }
+        #editor,#actions { 
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width:200px;
+        height: 200px;
+    }
+</style>
   </head>
   <body>
-    <div id="users"></div>
+      <h1>Performance comparation</h1>
+      <h2> This Example shows an interesting use case for the library mostrojs:</h2>
+
+     <p> As you can see in the code, in file rules.js, you can run any action in a thread apart, simply wrapping action with Engine.Thread(), without change your code</p>
+      <p> of course the limitation for js web workers are the same, so you cannot wrap an action which, for example, manipulates the dom.</p
+      <p> The code for actions remain identically and the rule fired when actions returns are the same. </p>
+      <p>This simple application show the time elapsed after the first action call, then after the second action call and the last is after coordination rule action.</p>
+      <button id="mainthread">Run in one Thread</button>
+      <button id="multithread">Run in Multi Thread</button>
+
+      <h2> Result </h2>
+      
+
+      <table id="result1" style="width:300px;float:left;border: 1px solid black;">
+          <tr>
+              <th>One Thread</th>
+          </tr>
+      </table> 
+<table id="result2" style="width:300px;float:left;border: 1px solid black;">
+          <tr>
+              <th>Multi Thread</th>
+          </tr>
+  </table> 
+
   </body>
 </html>
