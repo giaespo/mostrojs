@@ -20,7 +20,7 @@ Because of this, we see the proliferation of callbacks that inside them have asy
 This produces a spaghetti code that is very difficult to maintain.
 If we add WebWorkers that communicate with the main thread, it is the delirium!
 
-Monster js simplifies this by pulling the business logic from the callback, in what way?
+Mostro js simplifies this by pulling the business logic from the callback, in what way?
 Callbacks have only one task in mostrojs, asserting facts, or better change the status of the application.
 the logic is handled only by the rules engine.
 
